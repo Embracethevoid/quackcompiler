@@ -52,6 +52,7 @@ string type2structname(string s)
 
 codegen codegenforexpr(r_expr* e,statement* s,program* root)
 {
+	cout<<e->tag<<endl;
 	if(e->tag == string("IDENT"))
 	{
 		if(variabletale.find(e->identname) == variabletale.end())
@@ -95,7 +96,7 @@ codegen codegenforexpr(r_expr* e,statement* s,program* root)
 		int t = temp;
 		auto c = codegenforexpr(e->f.e,s,root);
 		file_h<<c.s<<endl;
-		string res = c.v + "->clazz->"+ e->f.s+"(";
+		string res = type2structname(e->m_type)+" temp"+to_string(temp)+" = "+ c.v + "->clazz->"+ e->f.s+"(";
 		int flag = 0;
 			if(e->f.e->tag == "IDENT")
 		{
@@ -213,7 +214,7 @@ codegen codegenforexpr(r_expr* e,program* root)
 		int t = temp;
 		auto c = codegenforexpr(e->f.e,root);
 		file_c<<c.s<<endl;
-		string res = c.v + "->clazz->"+ e->f.s+"(";
+		string res = type2structname(e->m_type) +" temp"+to_string(temp) +" = "+ c.v + "->clazz->"+ e->f.s+"(";
 		int flag = 0;
 		if(e->f.e->tag == "IDENT")
 		{
@@ -418,6 +419,7 @@ codegen codegenforexprinclass(r_expr* e,basic_class* c,program* root)
 			// }
 			// string type = classtable[e->b.l->m_type]->methodtable[e->b.l->identname]->m_returntype;
 			// cout<<type<<endl;
+			cout<<e->m_type<<" "<<c->name()<<endl;
 			return codegen{type2structname(e->m_type)+" temp"+to_string(temp)+ " = " +l.v+"->clazz->"+e->b.s+"("+l.v+","+r.v+");","temp"+to_string(temp)};
 	}
 	else if(e->tag == string("single_oper"))
@@ -441,19 +443,19 @@ codegen codegenforexprinclass(r_expr* e,basic_class* c,program* root)
 		//auto res = type2structname(e->m_type) + " temp"+to_string(t)+" = new_"+e->m_type+"(";
 		auto con = codegenforexprinclass(e->f.e,c,root);
 		file_h<<con.s<<endl;
-		if(e->f.e->tag == "IDENT")
-		{
-			e->f.e->m_type = c->m_variables_temp[e->f.e->identname];
-		}
-		else if(e->f.e->tag == "IDENTINMEMBER")
-		{
-			e->f.e->m_type = c->m_variables[e->f.e->identname];
-		}
-		cout<<e->f.e->m_type<<2<<endl;
-		string type = classtable[e->f.e->m_type]->methodtable[e->f.s]->m_returntype;
-		cout<<type<<endl;
-		string res = type2structname(type) + " temp"+to_string(t)+" = "+con.v + "->clazz->"+ e->f.s+"(";
-		res += type2structname(c->name())+" this";
+		// if(e->f.e->tag == "IDENT")
+		// {
+		// 	e->f.e->m_type = c->m_variables_temp[e->f.e->identname];
+		// }
+		// else if(e->f.e->tag == "IDENTINMEMBER")
+		// {
+		// 	e->f.e->m_type = c->m_variables[e->f.e->identname];
+		// }
+		cout<<e->m_type<<endl;
+		//string type = classtable[e->f.e->m_type]->methodtable[e->f.s]->m_returntype;
+		string res = type2structname(e->m_type) + " temp"+to_string(t)+" = "+con.v + "->clazz->"+ e->f.s+"(";
+		res += codegenforexprinclass(e->f.e,c,root).v;
+		
 		for(int i = 0; i< e->f.p->m_value.size();++i)
 		{
 			auto t = codegenforexprinclass(e->f.p->m_value[i],c,root);
@@ -519,9 +521,24 @@ codegen codegenforexprinmethod(r_expr* e,method* m,basic_class* c,program* root)
 		// 
 		if(variabletale_method.find(e->identname) == variabletale_method.end())
 		{
-			auto type = m->m_variables[e->identname];
-			variabletale_method.insert(e->identname);
-			return codegen{type2structname(type)+" "+e->identname+";",e->identname};
+			int flag = 1;
+			for(auto i:m->para())
+			{
+				if(e->identname == i.name)
+				{
+					flag = 0;
+				}
+			}
+			if(flag)
+			{
+				auto type = m->m_variables[e->identname];
+				variabletale_method.insert(e->identname);
+				return codegen{type2structname(type)+" "+e->identname+";",e->identname};
+			}
+			else
+			{
+				return codegen{"",e->identname};
+			}
 		}
 		else
 		{
@@ -563,7 +580,7 @@ codegen codegenforexprinmethod(r_expr* e,method* m,basic_class* c,program* root)
 		auto con = codegenforexprinmethod(e->f.e,m,c,root);
 		file_h<<con.s<<endl;
 		string type = classtable[e->f.e->m_type]->methodtable[e->f.s]->m_returntype;
-		string res = type2structname(type) + " temp"+to_string(t)+" = "+con.v + "->clazz->"+ e->f.s+"(";
+		string res = type2structname(e->m_type) + " temp"+to_string(t)+" = "+con.v + "->clazz->"+ e->f.s+"(";
 			if(e->f.e->tag == "IDENT")
 		{
 				res += con.v;
@@ -654,7 +671,8 @@ void codegenforstmtinstmt(statement* s,statement* s2,program* root)
 	{
 		auto first = s->branches[0];
 		auto con = codegenforexpr(first.condition,s2,root);
-		file_c<<"if("<<con.s<<")"<<endl<<"{"<<endl;
+		file_c<<con.s<<endl;
+		file_c<<"if("<<con.v<<")"<<endl<<"{"<<endl;
 		for(auto j:first.execution->value())
 		{
 			codegenforstmtinstmt(j,root);
@@ -761,7 +779,7 @@ void codegenforstmtinstmt(statement* s,statement* s2,program* root)
 	else 
 	{
 		auto c =  codegenforexpr(s->exp,s2,root);
-		file_c<<c.s<<endl;
+		file_c<<c.v<<endl;
 	}
 }
 
@@ -797,11 +815,18 @@ void codegenforstmtinstmt(statement* s,statement* s2,program* root)
 
 void codegenforstmtinstmt(statement* s,program* root)
 {
+	cout<<s->tag<<endl;
 	if(s->tag == string("IFELSE"))
 	{
 		auto first = s->branches[0];
 		auto con = codegenforexpr(first.condition,root);
-		file_c<<"if("<<con.s<<")"<<endl<<"{"<<endl;
+		for(auto i:s->m_variables)
+		{
+			file_c<<type2structname(root->m_variables[i.first])<<" "<<i.first<<";"<<endl;
+			variabletale.insert(i.first);
+		}
+		file_c<<con.s<<endl;
+		file_c<<"if("<<con.v<<"->value)"<<endl<<"{"<<endl;
 		for(auto j:first.execution->value())
 		{
 			codegenforstmtinstmt(j,root);
@@ -1263,7 +1288,7 @@ void codegenforclass(basic_class* c,program* root)
 	{
 		auto type = type2structname( i.second->m_returntype);
 		file_h<< type +" (*" + i.second->name()+") (";
-		file_h<< type2structname(c->name());
+		file_h<< type2structname(i.second->origin_class);
 		for(int j = 0; j< i.second->para().size();++j)
 		{
 			auto n = i.second->para()[j].type;
@@ -1274,11 +1299,8 @@ void codegenforclass(basic_class* c,program* root)
 	
 
 	file_h<<"};"<<endl;
-	vector<string> function_names;
-	// function_names.push_back(c->name()+"_literal");
-	// file_h<< type2structname(c->name())<<" "<<c->name()+"_literal()\n{\n";
-	function_names.push_back("new_"+c->name());
-	file_h<< type2structname(c->name())<<" new_"<<c->name()<<"(";
+	file_h<<"class_"<<c->name()<<" the_class_"<<c->name()<<";"<<endl;
+	file_h<<type2structname(c->name())<<" "<<c->name()<<"_literal(";
 	for(int i = 0;i<c->para().size();++i)
 	{
 		auto n = c->para()[i];
@@ -1292,16 +1314,24 @@ void codegenforclass(basic_class* c,program* root)
 		}
 		variabletale_class.insert(n.name);
 	}
+	file_h<<");"<<endl;
+
+	vector<string> function_names;
+	// function_names.push_back(c->name()+"_literal");
+	// file_h<< type2structname(c->name())<<" "<<c->name()+"_literal()\n{\n";
+	function_names.push_back("new_"+c->name());
+	file_h<< type2structname(c->name())<<" new_"<<c->name()<<"(";
+	
 	file_h<<")\n{\n";
-	file_h<<type2structname(c->name())+" new_thing"<<" = malloc(sizeof(struct"+type2structname(c->name())+ "_struct));"<<endl;
+	file_h<<type2structname(c->name())+" new_thing"<<" = ("<<type2structname(c->name())<<")malloc(sizeof(struct class_"+c->name()+ "_struct));"<<endl;
 	file_h<<"new_thing->clazz = the_class_"<<c->name()<<";"<<endl;
-	for(auto i:c->m_statements)
-	{
-		codegenforstmtinclass(i,c,root);
-	}
-	file_h<<"return new_"<<c->name()<<";"<<endl;
+	// for(auto i:c->m_statements)
+	// {
+	// 	codegenforstmtinclass(i,c,root);
+	// }
+	file_h<<"return new_thing;"<<endl;
 	file_h<<"}"<<endl;
-	variabletale_class.clear();
+	//variabletale_class.clear();
 	for(auto i:c->methodtable)
 	{
 		//file_h<<i.second->origin_class<<endl<<i.second->name()<<endl;
@@ -1343,13 +1373,40 @@ void codegenforclass(basic_class* c,program* root)
 		}
 	
 	}
-		file_h<<"struct "<<struct_name<<" the_"<<struct_name<<" = \n";
-		file_h<<"{"<<endl;
-		for(auto i:function_names)
+
+	file_h<<"struct "<<struct_name<<" the_"<<struct_name<<" = \n";
+	file_h<<"{"<<endl;
+	for(auto i:function_names)
+	{
+		file_h<<i<<","<<endl;
+	}
+	file_h<<"};"<<endl;
+	file_h<<"class_"<<c->name()<<" the_class_"<<c->name()<<" = &the_class_"<<c->name()<<"_struct;"<<endl;
+	file_h<<type2structname(c->name())<<" "<<c->name()<<"_literal(";
+	for(int i = 0;i<c->para().size();++i)
+	{
+		auto n = c->para()[i];
+		if(!i)
 		{
-			file_h<<i<<","<<endl;
+			file_h<<type2structname(n.type)<<" "<<n.name;
 		}
-		file_h<<"}"<<endl;
+		else
+		{
+			file_h<<" , "<<type2structname(n.type)<<" "<<n.name;
+		}
+		variabletale_class.insert(n.name);
+	}
+	file_h<<")"<<endl<<"{"<<endl;
+	file_h<<type2structname(c->name())<<" new_thing = the_class_"<<c->name()<<"->constructor();"<<endl;
+	for(auto i:c->m_statements)
+	{
+		codegenforstmtinclass(i,c,root);
+	}
+	file_h<<"return new_thing;"<<endl;
+	file_h<<"}"<<endl;
+
+
+
 
 
 	/*variables*/
@@ -1361,8 +1418,8 @@ void codegenforclass(basic_class* c,program* root)
 
 void codegenpgm(program* root)
 {
-	file_h.open("output.h");
-	file_c.open("output.c");
+	file_h.open("./output/output.h");
+	file_c.open("./output/output.c");
 	file_h<<"#ifndef OUTPUT_H"<<endl<<"#define OUTPUT_H"<<endl<<"#include \"Builtins.h\""<<endl;
 	file_c<<"#include \"output.h\""<<endl<<"#include<stdio.h>"<<endl<<"int main()\n{"<<endl;
 	for(auto c:root->cs)

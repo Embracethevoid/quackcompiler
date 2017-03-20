@@ -6,9 +6,9 @@ class Pt(x: Int, y: Int) {
   this.x = x;
   this.y = y;
 
-  def STR() : String {
-      return "(" + this.x.STR() + "," 
-                 + this.y.STR() + ")";
+  def STRING() : String {
+      return "(" + this.x.STRING() + "," 
+                 + this.y.STRING() + ")";
   
 	}
  
@@ -20,7 +20,7 @@ class Pt(x: Int, y: Int) {
       return Pt(this.x + other._x(), this.y + other._y());
   }
 }
-
+/*
 class Rect(ll: Pt, ur: Pt) extends Obj {
   this.ll = ll;
   this.ur = ur;
@@ -39,20 +39,25 @@ class Rect(ll: Pt, ur: Pt) extends Obj {
 
 }
 
+*/
 
-
-
-class Square(ll: Pt, side: Int) extends Rect {
+/*
+class Square(ll: Pt, side: Int)  {
   this.ll = ll;
   this.ur = Pt(this.ll._x() + side, this.ll._y() + side);
 }
+*/
 
 
- 
-a_square = Square( Pt(3,3), 5 );
-a_square = a_square.translate( Pt(2,2) );
+x = 5;
+x.PRINT();
+a = Pt(3,5);
+b = a.STRING();
+b.PRINT();
+
+//a_square = a_square.translate( Pt(2,2) );
 
 
 
-a_square.PRINT();
+//a_square.PRINT();
 

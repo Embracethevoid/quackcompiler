@@ -6,9 +6,9 @@ class Pt(x: Int, y: Int) {
   this.x = x;
   this.y = y;
 
-  def STR() : String {
-      return "(" + this.x.STR() + "," 
-                 + this.y.STR() + ")";
+  def STRING() : String {
+      return "(" + this.x.STRING() + "," 
+                 + this.y.STRING() + ")";
   
 	}
  
@@ -27,13 +27,13 @@ class Rect(ll: Pt, ur: Pt) extends Obj {
 
   def translate(delta: Pt) : Pt { return Pt(this.ll._x()+delta._x(), this.ur._y()+delta._y()); }
 
-  def STR(): String {
+  def STRING(): String {
       lr = Pt( this.ur._y(), this.ll._x() );  // lower right 
       ul = Pt( this.ll._x(), this.ur._y() );  // upper left
-      return "(" + this.ll.STR() + ", "
-                 +      ul.STR() + "," 
-                 + this.ur.STR() + ","
-                 +      lr.STR() + ")";
+      return "(" + this.ll.STRING() + ", "
+                 +      ul.STRING() + "," 
+                 + this.ur.STRING() + ","
+                 +      lr.STRING() + ")";
   }
 
 
@@ -47,14 +47,18 @@ class Square(ll: Pt, side: Int) extends Rect {
   this.ur = Pt(this.ll._x() + side, this.ll._y() + side);
 }
 
+a = Pt(3,5);
 
  
 a_square = Square( Pt(3,3), 5 );
-a_square = a_square.translate( Pt(2,2) );
+d = a_square.STRING();
+d.PRINT();
+
+b_square = a_square.translate( Pt(2,2) );
+c = b_square.STRING();
+
+
+c.PRINT();
 
 
 
-a_square.PRINT();
-
-p = 5;
-z = "firelord";

@@ -18,13 +18,13 @@ void initbuildinclass()
 	Obj->m_name = "Obj";
 	auto s_obj = new statements();
 	auto fs_obj = new formal_args();
-	auto obj_print = new method("PRINT",fs_obj,s_obj);
+	auto obj_print = new method("PRINT",fs_obj,"Obj",s_obj);
 	obj_print->origin_class = "Obj";
-	auto obj_STR = new method("STR",fs_obj,"String",s_obj);
+	auto obj_STR = new method("STRING",fs_obj,"String",s_obj);
 	obj_STR->origin_class = "Obj";
-    	Obj->methodtable["PRINT"] = obj_print;
+    Obj->methodtable["PRINT"] = obj_print;
 	Obj->m_methods.push_back(obj_print);
-	Obj->methodtable["STR"] = obj_STR;
+	Obj->methodtable["STRING"] = obj_STR;
 	Obj->m_methods.push_back(obj_STR);
     
 
@@ -100,9 +100,9 @@ quack_str->methodtable["PRINT"] = obj_print;
 	fs_int->m_value.push_back({"x","Int"});
 
 
-	auto int_STR = new method("STR",fs_int,"String",s_int);
+	auto int_STR = new method("STRING",fs_int,"String",s_int);
 	int_STR->origin_class = "Int";
-	quack_int->methodtable["STR"] = int_STR;
+	quack_int->methodtable["STRING"] = int_STR;
 	quack_int->m_methods.push_back(int_STR);	
 
 	auto int_plus = new method("PLUS",fs_int,"Int",s_int);

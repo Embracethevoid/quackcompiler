@@ -11,23 +11,23 @@
       * from every method to every other method.
       */
 
-     def _get_x(): Int {
+     def _x(): Int {
      	 return this.x; 
      } 
 
-     def _get_y(): Int {
+     def _y(): Int {
      	 return this.y;
      }
 
      /* Mutator: Evaluate for effect */
-     def translate(dx: Int, dy: Int): Nothing {
+     def translate(dx: Int, dy: Int): NOTHING {
      	 this.x = this.x + dx;
 	 this.y = this.y + dy;
      }
 
      /* More functional style: Evaluate for value */
      def PLUS(other: Pt): Pt {
-     	 return Pt(this.x + other.x, this.y + other.y); 
+     	 return Pt(this.x + other._x(), this.y + other._y()); 
      }
 }
 

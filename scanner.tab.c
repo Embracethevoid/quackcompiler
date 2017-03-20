@@ -3713,6 +3713,7 @@ build type for class
 
 void buildtypeforexprinclass(r_expr* e,basic_class* c)
 {
+	cout<<e->tag<<" "<<c->name()<<endl;
 	if(e->tag == string("IDENT"))
 	{
 		if(e->identname != "this")
@@ -3783,23 +3784,47 @@ void buildtypeforexprinclass(r_expr* e,basic_class* c)
 		//check if there is function
 		//s->m_variable[e->f.s] = "Bottom";
 		//getinitializedidentformethod(e,s,m);
+		buildtypeforexprinclass(e->f.e,c);
 		auto temp = e->f.e->m_type;
-		if(!(classtable[temp]->methodtable.find(e->f.s) == classtable[temp]->methodtable.end()))
+		cout<<temp<<endl;
+		if(classtable[temp]->methodtable.find(e->f.s) == classtable[temp]->methodtable.end())
 		{
 			cerr<< temp<<endl;
 			cerr<<"unknown function "<<e->f.s<<endl;
 			exit(-1);
 		}
+		e->m_type = classtable[temp]->methodtable[e->f.s]->m_returntype;
+		cout<<e->m_type<<" "<<e->f.e->identname<<" "<<c->name()<<endl;
 	}
 	else if(e->tag == string("class_call"))
 	{
 		if(classtable.find(e->c.s) != classtable.end())
 		{
 			e->m_type = classtable[e->c.s]->name();
+			for(int i = 0;i<e->c.p->m_value.size();++i)
+			{
+				auto p = e->c.p->m_value[i];
+				buildtypeforexprinclass(p,c);
+				if(!issubtype(p->m_type,classtable[e->c.s]->para()[i].type))
+				{
+					cerr<<"wrong para type"<<endl;
+					exit(-1);
+				}
+			}
 		}
 		else if(c->methodtable.find(e->c.s) != c->methodtable.end())
 		{
 			e->m_type = c->methodtable[e->c.s]->m_returntype;
+			for(int i = 0;i<e->c.p->m_value.size();++i)
+			{
+				auto p = e->c.p->m_value[i];
+				buildtypeforexprinclass(p,c);
+				if(!issubtype(p->m_type,c->methodtable[e->f.s]->para()[i].type))
+				{
+					cerr<<"wrong para type"<<endl;
+					exit(-1);
+				}
+			}
 		}
 		else
 		{
@@ -3925,7 +3950,6 @@ build type for method
 
 void buildtypeforexprinmethod(r_expr* e, method* m, basic_class* c)
 {
-	cout<<e->tag<<endl;
 	if(e->tag == string("IDENT"))
 	{
 		if(e->identname != "this")
@@ -4241,7 +4265,7 @@ if(e->tag == string("IDENT"))
 		cout<<temp<<endl;
 		if(classtable[temp]->methodtable.find(e->f.s) == classtable[temp]->methodtable.end())
 		{
-			cerr<<"unknown function "<<endl;
+			cerr<<"unknown function "<< e->f.s<<endl;
 			exit(-1);
 		}
 		else
